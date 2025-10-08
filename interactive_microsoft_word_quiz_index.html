@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Интерактивный тест по Microsoft Word</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Одностраничный интерактивный тест по Microsoft Word: 30 вопросов, мгновенная проверка, обзор ошибок, таймер, прогресс."/>
+  <style>
+    /* Доп. мелочи под Tailwind */
+    .gradient-bg { background: radial-gradient(1200px 600px at 10% 10%, rgba(79,70,229,.15), transparent),
+                                 radial-gradient(1000px 600px at 90% 20%, rgba(236,72,153,.15), transparent),
+                                 radial-gradient(1000px 600px at 30% 90%, rgba(20,184,166,.15), transparent); }
+    .glass { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  </style>
+</head>
+<body class="min-h-screen gradient-bg text-slate-100">
+  <!-- Shell -->
+  <div class="max-w-5xl mx-auto px-4 py-10">
+    <!-- Header -->
+    <header class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-indigo-400">
+          <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h15A1.5 1.5 0 0 1 21 4.5v15a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 19.5v-15Z"/>
+        </svg>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Microsoft Word — интерактивный тест</h1>
+      </div>
+      <span class="text-xs sm:text-sm text-slate-300">Single-file • TailwindCSS • Vanilla JS</span>
+    </header>
+
+    <!-- Card -->
+    <main class="glass bg-white/10 border border-white/10 rounded-2xl shadow-2xl">
+      <!-- Toolbar -->
+      <div class="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-6 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <span class="text-xs uppercase tracking-widest text-slate-300">РЕЖИМ</span>
+          <div class="inline-flex rounded-xl overflow-hidden border border-white/10">
+            <button id="modeTest" class="px-3 py-1.5 text-sm bg-white/10 hover:bg-white/20 transition">Тест</button>
+            <button id="modePractice" class="px-3 py-1.5 text-sm hover:bg-white/10 transition">Тренировка</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="flex items-center gap-2"><span class="text-xs text-slate-300">Таймер</span>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" value="" class="sr-only peer" id="timerToggle">
+              <div class="w-11 h-6 bg-white/10 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-400/40"></div>
+            </label>
+          </div>
+          <button id="btnReset" class="text-sm px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10">Сброс</button>
+        </div>
+      </div>
+
+      <!-- Start screen -->
+      <section id="startScreen" class="p-6 sm:p-10">
+        <div class="grid sm:grid-cols-2 gap-6 items-center">
+          <div>
+            <h2 class="text-xl sm:text-2xl font-bold">Что внутри</h2>
+            <ul class="mt-4 text-slate-200/90 space-y-2 list-disc list-inside">
+              <li>30 вопросов по основам и продвинутым возможностям Word</li>
+              <li>Два режима: <span class="font-semibold">Тест</span> (оценка) и <span class="font-semibold">Тренировка</span> (объяснения сразу)</li>
+              <li>Прогресс‑бар, подсветка ответов, обзор ошибок</li>
+              <li>Не требует серверной части — один <code>index.html</code></li>
+            </ul>
+            <div class="mt-6 flex flex-wrap gap-3">
+              <button id="btnStart" class="px-5 py-3 rounded-2xl bg-indigo-500 hover:bg-indigo-600 font-semibold shadow-lg">
+                Начать
+              </button>
+              <button id="btnShuffle" class="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10">
+                Перемешать вопросы
+              </button>
+            </div>
+          </div>
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-6">
+            <h3 class="font-semibold mb-2">Быстрые настройки</h3>
+            <label class="block text-sm mb-3">Количество вопросов
+              <input id="qCountInput" type="number" min="5" max="30" value="30" class="mt-1 w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2"/>
+            </label>
+            <label class="block text-sm mb-3">Ограничение на вопрос (сек)
+              <input id="qTimeInput" type="number" min="10" max="180" value="45" class="mt-1 w-full bg-white/10 border border-white/10 rounded-xl px-3 py-2"/>
+            </label>
+            <p class="text-xs text-slate-300">Подсказка: в тренировочном режиме объяснение показывается сразу после выбора.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Quiz screen -->
+      <section id="quizScreen" class="hidden">
+        <!-- Progress & stats -->
+        <div class="p-4 sm:p-6 border-b border-white/10 flex flex-wrap items-center justify-between gap-4">
+          <div class="w-full sm:flex-1">
+            <div class="h-3 bg-white/5 rounded-full overflow-hidden">
+              <div id="progressBar" class="h-3 bg-indigo-500 transition-all" style="width:0%"></div>
+            </div>
+            <div class="mt-2 text-xs text-slate-300"><span id="progressText">0 / 0</span></div>
+          </div>
+          <div class="flex items-center gap-6">
+            <div class="text-center">
+              <div class="text-2xl font-bold" id="scoreText">0</div>
+              <div class="text-xs text-slate-300">Баллы</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold" id="timerText">—</div>
+              <div class="text-xs text-slate-300">Секунд</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Q/A card -->
+        <div class="p-6 sm:p-10 space-y-6">
+          <div>
+            <div class="text-xs uppercase tracking-widest text-slate-300 mb-1">Вопрос</div>
+            <h2 id="questionText" class="text-xl sm:text-2xl font-bold">—</h2>
+          </div>
+
+          <div id="options" class="grid sm:grid-cols-2 gap-3"></div>
+
+          <div id="explanation" class="hidden rounded-2xl bg-emerald-400/10 border border-emerald-400/20 p-4 text-sm"></div>
+
+          <div class="flex flex-wrap gap-3 pt-4 border-t border-white/10">
+            <button id="btnPrev" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10">Назад</button>
+            <button id="btnNext" class="px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 font-semibold">Далее</button>
+            <button id="btnSkip" class="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10">Пропустить</button>
+            <button id="btnReveal" class="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/30">Показать ответ</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results screen -->
+      <section id="resultsScreen" class="hidden p-6 sm:p-10">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div>
+            <h2 class="text-2xl font-bold">Результаты</h2>
+            <p class="text-slate-200/90" id="resultSummary">—</p>
+          </div>
+          <div class="rounded-2xl bg-white/5 border border-white/10 p-4 min-w-[240px]">
+            <div class="text-sm text-slate-300">Правильных</div>
+            <div class="text-2xl font-extrabold" id="resCorrect">0</div>
+            <div class="mt-2 text-sm text-slate-300">Неверных</div>
+            <div class="text-2xl font-extrabold" id="resWrong">0</div>
+          </div>
+        </div>
+
+        <h3 class="mt-8 mb-3 font-semibold">Разбор вопросов</h3>
+        <div id="reviewList" class="space-y-3"></div>
+
+        <div class="mt-8 flex flex-wrap gap-3">
+          <button id="btnRetry" class="px-5 py-3 rounded-2xl bg-indigo-500 hover:bg-indigo-600 font-semibold">Пройти снова</button>
+          <button id="btnBackHome" class="px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/10">К началу</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="text-center text-xs text-slate-400 mt-6">© 2025 Interactive Quiz • Single-file demo</footer>
+  </div>
+
+  <script>
+    // ==========================
+    // ВОПРОСЫ (30 шт.)
+    // Формат: { q, options: [a,b,c,d], answer: 0..3, why }
+    // ==========================
+    const QUESTIONS = [
+      { q: "Какое расширение по умолчанию у документов Word (новые версии)?",
+        options: [".doc", ".docx", ".rtf", ".dot"], answer: 1,
+        why: "С Word 2007 по умолчанию используется формат OpenXML — .docx." },
+      { q: "Где включить отображение скрытых символов форматирования (¶)?",
+        options: ["Вкладка Вставка → Символ", "Вкладка Главная → Показать все", "Вкладка Вид → Навигация", "Правый клик по полю страницы"], answer: 1,
+        why: "Кнопка ¶ находится на вкладке ‘Главная’ в группе ‘Абзац’." },
+      { q: "Какая горячая клавиша вставляет разрыв страницы?",
+        options: ["Ctrl + Enter", "Ctrl + Shift + N", "Alt + Enter", "Shift + Enter"], answer: 0,
+        why: "Разрыв страницы в Word: Ctrl+Enter." },
+      { q: "Как быстро применить стиль ‘Обычный’ к абзацу?",
+        options: ["Ctrl+Space", "Ctrl+Shift+N", "Alt+N", "Ctrl+Q"], answer: 1,
+        why: "Ctrl+Shift+N — стиль ‘Обычный’. Ctrl+Space — очистка форматирования символов, Ctrl+Q — абзац." },
+      { q: "Как вставить номер страницы в колонтитуле?",
+        options: ["Вставка → Номер страницы", "Ссылки → Сноска", "Главная → Нумерация", "Макет → Разрывы"], answer: 0,
+        why: "Нумерация страниц добавляется через Вставка → Номер страницы." },
+      { q: "Как защитить документ паролем на открытие?",
+        options: ["Файл → Сведения → Защитить документ", "Главная → Шрифт", "Рецензирование → Ограничить редактирование", "Вид → Режим чтения"], answer: 0,
+        why: "В ‘Файл → Сведения’ есть опция ‘Защитить документ’ → ‘Зашифровать с паролем’." },
+      { q: "Где создать оглавление на основе стилей заголовков?",
+        options: ["Вставка → Оглавление", "Ссылки → Оглавление", "Главная → Стили", "Вид → Область навигации"], answer: 1,
+        why: "Оглавление формируется на вкладке ‘Ссылки’." },
+      { q: "Как вставить неразрывный пробел?",
+        options: ["Ctrl+Shift+Space", "Ctrl+Space", "Alt+Space", "Shift+Space"], answer: 0,
+        why: "Неразрывный пробел: Ctrl+Shift+Пробел." },
+      { q: "Что делает сочетание Ctrl+H?",
+        options: ["Проверка орфографии", "Замена (Найти и заменить)", "Справка", "История буфера"], answer: 1,
+        why: "Ctrl+H открывает ‘Замену’." },
+      { q: "Как вставить сноску внизу страницы?",
+        options: ["Ссылки → Вставить концевую сноску", "Ссылки → Вставить сноску", "Вставка → Примечание", "Главная → Стили"], answer: 1,
+        why: "Классическая сноска — Ссылки → Вставить сноску (внизу страницы)." },
+      { q: "Как отобразить линейки?",
+        options: ["Вид → Линейка", "Главная → Абзац", "Макет → Поля", "Файл → Параметры → Дополнительно"], answer: 0,
+        why: "Пункт ‘Линейка’ на вкладке ‘Вид’." },
+      { q: "Где изменить поля страницы?",
+        options: ["Макет → Поля", "Главная → Абзац", "Вставка → Страница", "Ссылки → Содержание"], answer: 0,
+        why: "Поля страницы находятся на вкладке ‘Макет’." },
+      { q: "Где включить автосохранение в OneDrive/SharePoint?",
+        options: ["Файл → Сохранить как", "Главная → Автосохранение", "Верхняя панель (тумблер) при сохранении в облако", "Ссылки → Автособирание"], answer: 2,
+        why: "Тумблер ‘Автосохранение’ отображается для облачных документов в левом верхнем углу окна." },
+      { q: "Как вставить ‘Разрыв раздела: следующая страница’?",
+        options: ["Макет → Разрывы → Следующая страница", "Вставка → Разметка", "Главная → Разрыв", "Ссылки → Следующая глава"], answer: 0,
+        why: "Разрывы разделов управляются на вкладке ‘Макет’." },
+      { q: "Как быстро увеличить шрифт на 1 пункт?",
+        options: ["Ctrl+Shift+> ", "Ctrl+]", "Ctrl+Shift+.", "Alt+Shift+>"], answer: 1,
+        why: "Ctrl+] — +1pt, Ctrl+[ — −1pt. Ctrl+Shift+> увеличивает по преднабору размеров." },
+      { q: "Комбинация для ‘жирного’ начертания?",
+        options: ["Ctrl+J", "Ctrl+B", "Ctrl+L", "Ctrl+K"], answer: 1,
+        why: "Ctrl+B — Bold (жирный)." },
+      { q: "Как вставить поле с текущим номером страницы в текст?",
+        options: ["Вставка → Экспресс-блоки → Поле → Page", "Главная → Нумерация", "Ссылки → Перекрестная ссылка", "Вид → Черновик"], answer: 0,
+        why: "Через ‘Поле’ можно вставлять коды полей, например PAGE." },
+      { q: "Как закрепить рисунок, чтобы он перемещался вместе с абзацем?",
+        options: ["Параметры разметки → В тексте", "Параметры разметки → Обтекание текстом", "Параметры разметки → Привязать к абзацу", "Главная → Стили"], answer: 2,
+        why: "Опция привязки управляет поведением якоря объекта." },
+      { q: "Где задать межстрочный интервал 1.5?",
+        options: ["Главная → Абзац → Интервал", "Вид → Масштаб", "Макет → Поля", "Рецензирование → Слежение"], answer: 0,
+        why: "Межстрочный интервал на вкладке ‘Главная’ в группе ‘Абзац’." },
+      { q: "Как создать стиль на основе выделенного фрагмента?",
+        options: ["Главная → Стили → Создать стиль", "Вставка → Стили", "Макет → Стиль страницы", "Ссылки → Управление стилями"], answer: 0,
+        why: "Создать стиль доступно из панели ‘Стили’." },
+      { q: "Где включить отслеживание правок?",
+        options: ["Рецензирование → Исправления (Отслеживание изменений)", "Главная → Правка", "Ссылки → Примечания", "Вставка → Комментарий"], answer: 0,
+        why: "Режим отслеживания изменений на вкладке ‘Рецензирование’." },
+      { q: "Как вставить формулу в документ?",
+        options: ["Вставка → Символ", "Вставка → Формула", "Главная → Формула", "Макет → Уравнение"], answer: 1,
+        why: "Word имеет редактор уравнений на вкладке ‘Вставка’." },
+      { q: "Как выполнить ‘Очистить формат’ для выделенного текста?",
+        options: ["Ctrl+Space", "Ctrl+Q", "Ctrl+M", "Ctrl+K"], answer: 0,
+        why: "Ctrl+Space очищает формат символов (локальные атрибуты). Ctrl+Q — абзац." },
+      { q: "Как создать список иллюстраций на основе подписей?",
+        options: ["Ссылки → Вставить оглавление", "Ссылки → Вставить список иллюстраций", "Вставка → Подпись", "Главная → Нумерация"], answer: 1,
+        why: "Список иллюстраций формируется на вкладке ‘Ссылки’." },
+      { q: "Как вставить ‘таблицу содержания’ (TOC) с уровнями заголовков 1–3?",
+        options: ["Ссылки → Оглавление → Автособираемое", "Главная → Стили", "Вставка → Таблица", "Вид → Область навигации"], answer: 0,
+        why: "Автособираемое оглавление строится по стилям Заголовок 1–3 по умолчанию." },
+      { q: "Где изменить ориентацию страницы на альбомную?",
+        options: ["Макет → Ориентация → Альбомная", "Вставка → Макет страницы", "Вид → Разметка", "Главная → Ориентация"], answer: 0,
+        why: "Ориентация страницы — вкладка ‘Макет’." },
+      { q: "Как вставить перекрестную ссылку на рисунок?",
+        options: ["Ссылки → Перекрестная ссылка", "Вставка → Ссылка", "Главная → Ссылки", "Рецензирование → Ссылка"], answer: 0,
+        why: "Перекрестные ссылки находятся на вкладке ‘Ссылки’." },
+      { q: "Как быстро выделить слово и изменить регистр (нижний/ВЕРХНИЙ/Как в предложении)?",
+        options: ["Двойной щелчок, Shift+F3", "Тройной щелчок, Ctrl+U", "Двойной щелчок, Ctrl+Shift+C", "Правый клик, Alt+F9"], answer: 0,
+        why: "Shift+F3 переключает регистр выделенного фрагмента." },
+      { q: "Как вставить содержимое из буфера без форматирования?",
+        options: ["Ctrl+V", "Ctrl+Shift+V", "Ctrl+Alt+V → Без форматирования", "Shift+Insert"], answer: 2,
+        why: "Через ‘Специальная вставка’ можно выбрать ‘Неформатированный текст’." },
+      { q: "Как вставить поле с датой, обновляемой автоматически?",
+        options: ["Вставка → Дата и время (с обновлением)", "Вставка → Экспресс-блоки → Поле → DATE", "Главная → Дата", "Рецензирование → Дата"], answer: 1,
+        why: "Код поля DATE автоматически обновляется при пересчёте." },
+    ];
+
+    // ==========================
+    // УТИЛИТЫ
+    // ==========================
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const shuffle = (arr) => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+
+    // ==========================
+    // СОСТОЯНИЕ
+    // ==========================
+    const state = {
+      mode: 'test', // 'test' | 'practice'
+      questions: [],
+      index: 0,
+      selected: new Map(), // qIndex -> optionIndex
+      revealed: new Set(), // вопросы, где показан ответ
+      score: 0,
+      limit: 30,
+      perQuestionSec: 45,
+      timerOn: false,
+      timeLeft: 0,
+      timerId: null,
+    };
+
+    // ==========================
+    // ЭКРАНЫ
+    // ==========================
+    const startScreen = $('#startScreen');
+    const quizScreen = $('#quizScreen');
+    const resultsScreen = $('#resultsScreen');
+
+    // Контролы
+    const btnStart = $('#btnStart');
+    const btnShuffle = $('#btnShuffle');
+    const qCountInput = $('#qCountInput');
+    const qTimeInput = $('#qTimeInput');
+    const timerToggle = $('#timerToggle');
+
+    const modeTest = $('#modeTest');
+    const modePractice = $('#modePractice');
+    const btnReset = $('#btnReset');
+
+    // Квиз
+    const progressBar = $('#progressBar');
+    const progressText = $('#progressText');
+    const scoreText = $('#scoreText');
+    const timerText = $('#timerText');
+    const questionText = $('#questionText');
+    const optionsBox = $('#options');
+    const explanation = $('#explanation');
+
+    const btnPrev = $('#btnPrev');
+    const btnNext = $('#btnNext');
+    const btnSkip = $('#btnSkip');
+    const btnReveal = $('#btnReveal');
+
+    // Результаты
+    const resultSummary = $('#resultSummary');
+    const resCorrect = $('#resCorrect');
+    const resWrong = $('#resWrong');
+    const reviewList = $('#reviewList');
+    const btnRetry = $('#btnRetry');
+    const btnBackHome = $('#btnBackHome');
+
+    // ==========================
+    // ИНИЦИАЛИЗАЦИЯ
+    // ==========================
+    function init() {
+      state.questions = QUESTIONS.slice(0, 30);
+      applySettingsFromInputs();
+      renderStart();
+    }
+
+    function applySettingsFromInputs() {
+      state.limit = clamp(parseInt(qCountInput.value||30,10), 5, 30);
+      state.perQuestionSec = clamp(parseInt(qTimeInput.value||45,10), 10, 180);
+      state.timerOn = !!timerToggle.checked;
+    }
+
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+
+    function resetAll() {
+      state.index = 0;
+      state.selected.clear();
+      state.revealed.clear();
+      state.score = 0;
+      stopTimer();
+      scoreText.textContent = '0';
+      timerText.textContent = '—';
+    }
+
+    function startQuiz() {
+      applySettingsFromInputs();
+      resetAll();
+      const picked = state.questions.slice(0);
+      if (picked.length > state.limit) picked.length = state.limit;
+      // фиксируем порядок, можно было бы перемешать тут
+      state.questions = picked;
+      showQuiz();
+      renderQuestion();
+      if (state.timerOn) startTimer();
+    }
+
+    function showStart() {
+      startScreen.classList.remove('hidden');
+      quizScreen.classList.add('hidden');
+      resultsScreen.classList.add('hidden');
+    }
+    function showQuiz() {
+      startScreen.classList.add('hidden');
+      quizScreen.classList.remove('hidden');
+      resultsScreen.classList.add('hidden');
+    }
+    function showResults() {
+      startScreen.classList.add('hidden');
+      quizScreen.classList.add('hidden');
+      resultsScreen.classList.remove('hidden');
+    }
+
+    // ==========================
+    // РЕНДЕР ВОПРОСА
+    // ==========================
+    function renderStart(){
+      showStart();
+    }
+
+    function renderQuestion(){
+      const idx = state.index;
+      const q = state.questions[idx];
+      progressText.textContent = `${idx+1} / ${state.questions.length}`;
+      const pct = ((idx) / state.questions.length) * 100;
+      progressBar.style.width = `${pct}%`;
+
+      questionText.textContent = q.q;
+      optionsBox.innerHTML = '';
+      explanation.classList.add('hidden');
+      explanation.textContent = '';
+
+      q.options.forEach((opt, i) => {
+        const chosen = state.selected.get(idx);
+        const base = 'flex items-center gap-3 p-4 rounded-xl border bg-white/5 border-white/10 hover:bg-white/10 transition cursor-pointer';
+        const btn = document.createElement('button');
+        btn.className = base;
+        btn.innerHTML = `
+          <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 border border-white/10">${String.fromCharCode(65+i)}</span>
+          <span class="text-left">${opt}</span>
+        `;
+        btn.onclick = () => pickOption(i);
+        // подсветка выбранного
+        if (chosen === i) {
+          btn.classList.add('ring-2','ring-indigo-400','bg-white/10');
+        }
+        optionsBox.appendChild(btn);
+      });
+
+      // обновим кнопки
+      btnPrev.disabled = (idx===0);
+      btnNext.textContent = (idx===state.questions.length-1) ? 'Завершить' : 'Далее';
+      btnSkip.disabled = (idx===state.questions.length-1);
+      btnReveal.disabled = false;
+    }
+
+    function pickOption(i){
+      const idx = state.index;
+      const q = state.questions[idx];
+      state.selected.set(idx, i);
+
+      // пересчет очков (1 балл за правильный впервые выбранный ответ)
+      const prevCorrect = state.revealed.has(idx) ? null : null; // в режиме теста считаем по подтверждению переходом
+
+      // визуал
+      renderQuestion();
+
+      if (state.mode === 'practice') {
+        showAnswerExplanation();
+      }
+    }
+
+    function showAnswerExplanation(){
+      const idx = state.index;
+      const q = state.questions[idx];
+      const chosen = state.selected.get(idx);
+
+      // подсветка опций
+      const btns = $$('#options button');
+      btns.forEach((b, i) => {
+        b.classList.remove('ring-2','ring-emerald-400','ring-rose-400');
+        if (i === q.answer) {
+          b.classList.add('ring-2','ring-emerald-400');
+        }
+        if (typeof chosen === 'number') {
+          if (i === chosen && chosen !== q.answer) {
+            b.classList.add('ring-2','ring-rose-400');
+          }
+        }
+      });
+      explanation.classList.remove('hidden');
+      explanation.innerHTML = `<span class="font-semibold">Почему так:</span> ${q.why}`;
+    }
+
+    function confirmCurrentAndGo(nextIndex){
+      // В режиме теста: начисляем балл 1 раз, когда пользователь выбрал ответ и переходит дальше
+      const idx = state.index;
+      const q = state.questions[idx];
+      const chosen = state.selected.get(idx);
+      if (typeof chosen === 'number') {
+        if (!state.revealed.has(idx)) {
+          if (chosen === q.answer) state.score += 1;
+          state.revealed.add(idx);
+          scoreText.textContent = String(state.score);
+        }
+      }
+
+      // таймер
+      if (state.timerOn) { state.timeLeft = state.perQuestionSec; }
+
+      // переход
+      state.index = nextIndex;
+
+      if (state.index >= state.questions.length) {
+        finishQuiz();
+      } else {
+        renderQuestion();
+      }
+    }
+
+    function finishQuiz(){
+      stopTimer();
+      showResults();
+      const total = state.questions.length;
+      const correct = state.score;
+      const wrong = total - correct;
+      resCorrect.textContent = String(correct);
+      resWrong.textContent = String(wrong);
+      const pct = Math.round((correct/total)*100);
+      resultSummary.textContent = `Вы ответили правильно на ${correct} из ${total} (${pct}%).`;
+
+      // Обзор
+      reviewList.innerHTML = '';
+      state.questions.forEach((q, i) => {
+        const chosen = state.selected.get(i);
+        const ok = chosen === q.answer;
+        const card = document.createElement('div');
+        card.className = `p-4 rounded-xl border ${ok? 'border-emerald-400/30 bg-emerald-400/10':'border-rose-400/30 bg-rose-400/10'}`;
+        card.innerHTML = `
+          <div class="text-sm text-slate-300 mb-1">Вопрос ${i+1}</div>
+          <div class="font-semibold mb-2">${q.q}</div>
+          <div class="text-sm">Ваш ответ: ${typeof chosen==='number' ? escapeHtml(q.options[chosen]) : '<em>нет</em>'}</div>
+          <div class="text-sm">Правильный: <span class="font-semibold">${escapeHtml(q.options[q.answer])}</span></div>
+          <div class="mt-2 text-sm">${q.why}</div>
+        `;
+        reviewList.appendChild(card);
+      });
+    }
+
+    function startTimer(){
+      state.timeLeft = state.perQuestionSec;
+      timerText.textContent = String(state.timeLeft);
+      stopTimer();
+      state.timerId = setInterval(() => {
+        state.timeLeft -= 1;
+        timerText.textContent = String(Math.max(0, state.timeLeft));
+        if (state.timeLeft <= 0) {
+          // Автопереход как "пропуск"
+          const next = Math.min(state.index+1, state.questions.length);
+          confirmCurrentAndGo(next);
+        }
+      }, 1000);
+    }
+    function stopTimer(){
+      if (state.timerId) clearInterval(state.timerId);
+      state.timerId = null;
+    }
+
+    // ==========================
+    // СОБЫТИЯ UI
+    // ==========================
+    btnStart.addEventListener('click', () => {
+      startQuiz();
+    });
+
+    btnShuffle.addEventListener('click', () => {
+      state.questions = shuffle(QUESTIONS).slice(0,30);
+      qCountInput.value = 30;
+      renderStart();
+    });
+
+    qCountInput.addEventListener('change', applySettingsFromInputs);
+    qTimeInput.addEventListener('change', applySettingsFromInputs);
+    timerToggle.addEventListener('change', applySettingsFromInputs);
+
+    modeTest.addEventListener('click', () => {
+      state.mode = 'test';
+      modeTest.classList.add('bg-white/10');
+      modePractice.classList.remove('bg-white/10');
+    });
+    modePractice.addEventListener('click', () => {
+      state.mode = 'practice';
+      modePractice.classList.add('bg-white/10');
+      modeTest.classList.remove('bg-white/10');
+    });
+
+    btnReset.addEventListener('click', () => {
+      resetAll();
+      renderStart();
+    });
+
+    btnPrev.addEventListener('click', () => {
+      if (state.index>0) { state.index -= 1; renderQuestion(); }
+    });
+    btnNext.addEventListener('click', () => {
+      const next = state.index + 1;
+      confirmCurrentAndGo(next);
+    });
+    btnSkip.addEventListener('click', () => {
+      state.selected.delete(state.index);
+      const next = state.index + 1;
+      confirmCurrentAndGo(next);
+    });
+    btnReveal.addEventListener('click', () => {
+      showAnswerExplanation();
+      state.revealed.add(state.index);
+    });
+
+    btnRetry.addEventListener('click', () => {
+      showStart();
+      startQuiz();
+    });
+    btnBackHome.addEventListener('click', () => {
+      resetAll();
+      showStart();
+    });
+
+    // ==========================
+    // ВСПОМОГАТЕЛЬНОЕ
+    // ==========================
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#39;');
+    }
+
+    // Запуск
+    init();
+  </script>
+</body>
+</html>
